@@ -1,0 +1,35 @@
+<Interface xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Windows>
+        <Window name="SimpleCombatTextIncoming" inherits="SimpleCombatTextTupleTemplate" savesettings="true">
+        </Window>
+        <Window name="SimpleCombatTextOutgoing" inherits="SimpleCombatTextTupleTemplate" savesettings="true">
+        </Window>
+        <Window name="SimpleCombatTextTupleTemplate" handleinput="false" layer="popup" >
+	       <Size>
+	            <AbsPoint x="30" y="40" />
+	       </Size>
+           <Windows>
+           		<Label name="$parentHeal" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="center" relativePoint="center" relativeTo="$parent">
+		            	<AbsPoint x="0" y="-10" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           		<Label name="$parentDamage" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="center" relativePoint="center" relativeTo="$parent">
+		            	<AbsPoint x="0" y="10" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           </Windows>
+        </Window>
+    </Windows>
+</Interface>
