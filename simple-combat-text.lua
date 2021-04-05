@@ -16,7 +16,7 @@ local function log(message)
     TextLogAddEntry("Chat", SystemData.ChatLogFilters.SAY, towstring(message))
 end
 local function slash(input)
-    local command = input:match("^([a-z.]+)")
+    local command = input:match("^([a-z.:]+)")
     if command == "frequency" or command == "f" then
         local updateInterval = input:match("([0-9.]+)$")
         if updateInterval then
@@ -60,6 +60,43 @@ local function slash(input)
         else
             log("Please provide target and rgb values: /sct color outgoing:heal 0 255 0")
         end
+    elseif command == "toggle" or command == "t" then
+        local direction = input:match("([a-z:]+)$")
+        if direction then
+            if direction == "outgoing:heal" or direction == "o:h" then
+                SimpleCombatText.Settings.outgoingHealEnabled = not SimpleCombatText.Settings.outgoingHealEnabled
+                log("Outgoing Heal enabled? "..tostring(SimpleCombatText.Settings.outgoingHealEnabled))
+            elseif direction == "outgoing:damage" or direction == "o:d" then
+                SimpleCombatText.Settings.outgoingDamageEnabled = not SimpleCombatText.Settings.outgoingDamageEnabled
+                log("Outgoing Damage enabled? "..tostring(SimpleCombatText.Settings.outgoingDamageEnabled))
+            elseif direction == "incoming:damage" or direction == "i:d" then
+                SimpleCombatText.Settings.incomingDamageEnabled = not SimpleCombatText.Settings.incomingDamageEnabled
+                log("Incoming Damage enabled? "..tostring(SimpleCombatText.Settings.incomingDamageEnabled))
+            elseif direction == "incoming:heal" or direction == "i:h" then
+                SimpleCombatText.Settings.incomingHealEnabled = not SimpleCombatText.Settings.incomingHealEnabled
+                log("Incoming Heal enabled? "..tostring(SimpleCombatText.Settings.incomingHealEnabled))
+            else
+                log("Target not recognised, please use outgoing:heal or incoming:damage")
+            end
+        else
+            log("Please provide target: /sct toggle outgoing:heal")
+        end
+    elseif command == "lowerlimit:hit" or command == "lh" then
+        local amount = input:match("([1-9][0-9]*)$")
+        if amount then
+            SimpleCombatText.Settings.lowerLimitHit = tonumber(amount)
+            log("Minimum Amount per Hit "..amount)
+        else
+            log("Please provide an amount: /sct lowerlimit:hit 1")
+        end
+    elseif command == "lowerlimit:aggregated" or command == "la" then
+        local amount = input:match("([1-9][0-9]*)$")
+        if amount then
+            SimpleCombatText.Settings.lowerLimitAggregated = tonumber(amount)
+            log("Minimum Amount per Aggregate "..amount)
+        else
+            log("Please provide an amount: /sct lowerlimit:hit 1")
+        end
     end
 end
 function SimpleCombatText.OnInitialize()
@@ -79,6 +116,7 @@ function SimpleCombatText.OnInitialize()
     end
     if LibSlash ~= nil and LibSlash.RegisterSlashCmd ~= nil then --optional dependency
         LibSlash.RegisterSlashCmd("sct", slash)
+        LibSlash.RegisterSlashCmd("simplecombattext", slash)
     end
     if SimpleCombatText.Settings == nil then
         SimpleCombatText.Settings = {}
@@ -98,6 +136,24 @@ function SimpleCombatText.OnInitialize()
     if SimpleCombatText.Settings.incomingHealColor == nil then
         SimpleCombatText.Settings.incomingHealColor = colors.green
     end
+    if SimpleCombatText.Settings.incomingHealEnabled == nil then
+        SimpleCombatText.Settings.incomingHealEnabled = true
+    end
+    if SimpleCombatText.Settings.incomingDamageEnabled == nil then
+        SimpleCombatText.Settings.incomingDamageEnabled = true
+    end
+    if SimpleCombatText.Settings.outgoingHealEnabled == nil then
+        SimpleCombatText.Settings.outgoingHealEnabled = true
+    end
+    if SimpleCombatText.Settings.outgoingDamageEnabled == nil then
+        SimpleCombatText.Settings.outgoingDamageEnabled = true
+    end
+    if SimpleCombatText.Settings.lowerLimitHit == nil then
+        SimpleCombatText.Settings.lowerLimitHit = 1
+    end
+    if SimpleCombatText.Settings.lowerLimitAggregated == nil then
+        SimpleCombatText.Settings.lowerLimitAggregated = 1
+    end
     LabelSetTextColor("SimpleCombatTextOutgoingHeal", SimpleCombatText.Settings.outgoingHealColor.r, SimpleCombatText.Settings.outgoingHealColor.g, SimpleCombatText.Settings.outgoingHealColor.b)
     LabelSetTextColor("SimpleCombatTextOutgoingDamage", SimpleCombatText.Settings.outgoingDamageColor.r, SimpleCombatText.Settings.outgoingDamageColor.g, SimpleCombatText.Settings.outgoingDamageColor.b)
     LabelSetTextColor("SimpleCombatTextIncomingHeal", SimpleCombatText.Settings.incomingHealColor.r, SimpleCombatText.Settings.incomingHealColor.g, SimpleCombatText.Settings.incomingHealColor.b)
@@ -107,15 +163,19 @@ function SimpleCombatText.AddCombatEventText( hitTargetObjectNumber, hitAmount, 
     if GameData.Player.worldObjNum == hitTargetObjectNumber then
         if textType == GameData.CombatEvent.HIT or textType == GameData.CombatEvent.ABILITY_HIT or textType == GameData.CombatEvent.CRITICAL or textType == GameData.CombatEvent.ABILITY_CRITICAL then
             if hitAmount < 0 then
-                data.Incoming.Damage = data.Incoming.Damage - hitAmount
-            else
+                if SimpleCombatText.Settings.incomingDamageEnabled and hitAmount <= -1 * SimpleCombatText.Settings.lowerLimitHit then
+                    data.Incoming.Damage = data.Incoming.Damage - hitAmount
+                end
+            elseif SimpleCombatText.Settings.incomingHealEnabled and hitAmount >= SimpleCombatText.Settings.lowerLimitHit then
                 data.Incoming.Heal = data.Incoming.Heal + hitAmount
             end
         end
     elseif textType == GameData.CombatEvent.HIT or textType == GameData.CombatEvent.ABILITY_HIT or textType == GameData.CombatEvent.CRITICAL or textType == GameData.CombatEvent.ABILITY_CRITICAL then
         if hitAmount < 0 then
-            data.Outgoing.Damage = data.Outgoing.Damage - hitAmount
-        else
+            if SimpleCombatText.Settings.outgoingDamageEnabled and hitAmount <= -1 * SimpleCombatText.Settings.lowerLimitHit then
+                data.Outgoing.Damage = data.Outgoing.Damage - hitAmount
+            end
+        elseif SimpleCombatText.Settings.outgoingHealEnabled and hitAmount >= SimpleCombatText.Settings.lowerLimitHit then
             data.Outgoing.Heal = data.Outgoing.Heal + hitAmount
         end
     end
@@ -128,14 +188,14 @@ function SimpleCombatText.OnUpdate(elapsed)
     time = time - SimpleCombatText.Settings.updateInterval;
     for label,value in pairs(data) do
         for modifier,amount in pairs(value) do
-            if amount > 0 then
+            if amount >= SimpleCombatText.Settings.lowerLimitAggregated then
                 WindowSetShowing("SimpleCombatText"..label..modifier, true);
-                data[label][modifier] = 0
                 LabelSetText("SimpleCombatText"..label..modifier, towstring(amount))
                 WindowStartAlphaAnimation("SimpleCombatText"..label..modifier, Window.AnimationType.EASE_OUT, 1, 0, SimpleCombatText.Settings.updateInterval, true, 0, 0)
             else
                 WindowSetShowing("SimpleCombatText"..label..modifier, false);
             end
+            data[label][modifier] = 0
         end
     end
 end
