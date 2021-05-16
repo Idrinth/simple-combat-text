@@ -4,31 +4,99 @@
         </Window>
         <Window name="SimpleCombatTextOutgoing" inherits="SimpleCombatTextTupleTemplate" savesettings="true">
         </Window>
+        <Window name="SimpleCombatTextTupleDamageTemplate">
+	        <Size>
+	            <AbsPoint x="60" y="60" />
+	        </Size>
+           <Windows>
+           		<Label name="$parent1" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+		            	<AbsPoint x="0" y="0" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           		<Label name="$parent2" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent1">
+		            	<AbsPoint x="0" y="20" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           		<Label name="$parent3" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent2">
+		            	<AbsPoint x="0" y="20" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           	</Windows>
+        </Window>
+        <Window name="SimpleCombatTextTupleHealTemplate">
+	        <Size>
+	            <AbsPoint x="60" y="60" />
+	        </Size>
+           <Windows>
+           		<Label name="$parent3" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+		            	<AbsPoint x="0" y="0" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           		<Label name="$parent2" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent3">
+		            	<AbsPoint x="0" y="20" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           		<Label name="$parent1" inherits="DefaultWindowSmallText" textalign="center">
+		          <Size>
+		            <AbsPoint x="60" y="20" />
+		          </Size>
+		          <Anchors>
+		            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent2">
+		            	<AbsPoint x="0" y="20" />
+		            </Anchor>
+		          </Anchors>
+           		</Label>
+           	</Windows>
+        </Window>
         <Window name="SimpleCombatTextTupleTemplate" handleinput="false" layer="popup" >
 	       <Size>
-	            <AbsPoint x="30" y="40" />
+	            <AbsPoint x="60" y="120" />
 	       </Size>
            <Windows>
-           		<Label name="$parentHeal" inherits="DefaultWindowSmallText" textalign="center">
-		          <Size>
-		            <AbsPoint x="60" y="20" />
-		          </Size>
+           		<Window name="$parentHeal" inherits="SimpleCombatTextTupleHealTemplate" textalign="center">
 		          <Anchors>
-		            <Anchor point="center" relativePoint="center" relativeTo="$parent">
-		            	<AbsPoint x="0" y="-10" />
+		            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+		            	<AbsPoint x="0" y="0" />
 		            </Anchor>
 		          </Anchors>
-           		</Label>
-           		<Label name="$parentDamage" inherits="DefaultWindowSmallText" textalign="center">
-		          <Size>
-		            <AbsPoint x="60" y="20" />
-		          </Size>
+           		</Window>
+           		<Window name="$parentDamage" inherits="SimpleCombatTextTupleDamageTemplate" textalign="center">
 		          <Anchors>
-		            <Anchor point="center" relativePoint="center" relativeTo="$parent">
-		            	<AbsPoint x="0" y="10" />
+		            <Anchor point="bottomleft" relativePoint="bottomleft" relativeTo="$parent">
+		            	<AbsPoint x="0" y="0" />
 		            </Anchor>
 		          </Anchors>
-           		</Label>
+           		</Window>
            </Windows>
         </Window>
     </Windows>

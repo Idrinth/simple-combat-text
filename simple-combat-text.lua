@@ -10,6 +10,34 @@ local data = {
         Damage=0,
     }
 }
+local previous = {{
+    Incoming = {
+        Heal=0,
+        Damage=0,
+    },
+    Outgoing = {
+        Heal=0,
+        Damage=0,
+    }
+},{
+    Incoming = {
+        Heal=0,
+        Damage=0,
+    },
+    Outgoing = {
+        Heal=0,
+        Damage=0,
+    }
+},{
+    Incoming = {
+        Heal=0,
+        Damage=0,
+    },
+    Outgoing = {
+        Heal=0,
+        Damage=0,
+    }
+}}
 local time=0;
 
 local function log(message)
@@ -28,6 +56,9 @@ local function slash(input)
                 log("Update Interval set to "..tostring(updateInterval))
             end
         end
+    elseif command == "moving" or command == "m" then
+        SimpleCombatText.Settings.moving = not SimpleCombatText.Settings.moving
+        log("Moving set to "..tostring(SimpleCombatText.Settings.moving))
     elseif command == "color" or command == "c" then
         local direction,r,g,b = input:match("([a-z:]+) ([0-9]+) ([0-9]+) ([0-9]+)$")
         if direction then
@@ -105,15 +136,6 @@ function SimpleCombatText.OnInitialize()
         red={r=255,g=0,b=0},
     }
     RegisterEventHandler( SystemData.Events.WORLD_OBJ_COMBAT_EVENT, "SimpleCombatText.AddCombatEventText")
-    for label,value in pairs(data) do
-        CreateWindow("SimpleCombatText"..label, true)
-        WindowSetScale("SimpleCombatText"..label, 2)
-        LabelSetTextColor("SimpleCombatText"..label.."Heal", colors.green.r, colors.green.g, colors.green.b)
-        LabelSetTextColor("SimpleCombatText"..label.."Damage", colors.red.r, colors.red.g, colors.red.b)
-        LabelSetFont("SimpleCombatText"..label.."Heal", ChatSettings.Fonts[4].fontName, WindowUtils.FONT_DEFAULT_TEXT_LINESPACING) -- Age of Reckoning Large
-        LabelSetFont("SimpleCombatText"..label.."Damage", ChatSettings.Fonts[4].fontName, WindowUtils.FONT_DEFAULT_TEXT_LINESPACING) -- Age of Reckoning Large
-        LayoutEditor.RegisterWindow("SimpleCombatText"..label, towstring("SimpleCombatText"..label),L"", true, true, true, nil, nil, false, 1, nil, nil )
-    end
     if LibSlash ~= nil and LibSlash.RegisterSlashCmd ~= nil then --optional dependency
         LibSlash.RegisterSlashCmd("sct", slash)
         LibSlash.RegisterSlashCmd("simplecombattext", slash)
@@ -154,10 +176,20 @@ function SimpleCombatText.OnInitialize()
     if SimpleCombatText.Settings.lowerLimitAggregated == nil then
         SimpleCombatText.Settings.lowerLimitAggregated = 1
     end
-    LabelSetTextColor("SimpleCombatTextOutgoingHeal", SimpleCombatText.Settings.outgoingHealColor.r, SimpleCombatText.Settings.outgoingHealColor.g, SimpleCombatText.Settings.outgoingHealColor.b)
-    LabelSetTextColor("SimpleCombatTextOutgoingDamage", SimpleCombatText.Settings.outgoingDamageColor.r, SimpleCombatText.Settings.outgoingDamageColor.g, SimpleCombatText.Settings.outgoingDamageColor.b)
-    LabelSetTextColor("SimpleCombatTextIncomingHeal", SimpleCombatText.Settings.incomingHealColor.r, SimpleCombatText.Settings.incomingHealColor.g, SimpleCombatText.Settings.incomingHealColor.b)
-    LabelSetTextColor("SimpleCombatTextIncomingDamage", SimpleCombatText.Settings.incomingDamageColor.r, SimpleCombatText.Settings.incomingDamageColor.g, SimpleCombatText.Settings.incomingDamageColor.b)
+    if SimpleCombatText.Settings.moving == nil then
+        SimpleCombatText.Settings.moving = false
+    end
+    for label,value in pairs(data) do
+        CreateWindow("SimpleCombatText"..label, true)
+        WindowSetScale("SimpleCombatText"..label, 2)
+        for i=1,3 do
+            LabelSetFont("SimpleCombatText"..label.."Heal"..i, ChatSettings.Fonts[4].fontName, WindowUtils.FONT_DEFAULT_TEXT_LINESPACING) -- Age of Reckoning Large
+            LabelSetFont("SimpleCombatText"..label.."Damage"..i, ChatSettings.Fonts[4].fontName, WindowUtils.FONT_DEFAULT_TEXT_LINESPACING) -- Age of Reckoning Large
+            LabelSetTextColor("SimpleCombatText"..label.."Heal"..i, SimpleCombatText.Settings.outgoingHealColor.r, SimpleCombatText.Settings.outgoingHealColor.g, SimpleCombatText.Settings.outgoingHealColor.b)
+            LabelSetTextColor("SimpleCombatText"..label.."Damage"..i, SimpleCombatText.Settings.outgoingDamageColor.r, SimpleCombatText.Settings.outgoingDamageColor.g, SimpleCombatText.Settings.outgoingDamageColor.b)
+        end
+        LayoutEditor.RegisterWindow("SimpleCombatText"..label, towstring("SimpleCombatText"..label),L"", true, true, true, nil, nil, false, 1, nil, nil )
+    end
 end
 function SimpleCombatText.AddCombatEventText( hitTargetObjectNumber, hitAmount, textType )
     if GameData.Player.worldObjNum == hitTargetObjectNumber then
@@ -182,20 +214,55 @@ function SimpleCombatText.AddCombatEventText( hitTargetObjectNumber, hitAmount, 
 end
 function SimpleCombatText.OnUpdate(elapsed)
     time = time + elapsed
-    if time < SimpleCombatText.Settings.updateInterval then
-        return
-    end
-    time = time - SimpleCombatText.Settings.updateInterval;
-    for label,value in pairs(data) do
-        for modifier,amount in pairs(value) do
-            if amount >= SimpleCombatText.Settings.lowerLimitAggregated then
-                WindowSetShowing("SimpleCombatText"..label..modifier, true);
-                LabelSetText("SimpleCombatText"..label..modifier, towstring(amount))
-                WindowStartAlphaAnimation("SimpleCombatText"..label..modifier, Window.AnimationType.EASE_OUT, 1, 0, SimpleCombatText.Settings.updateInterval, true, 0, 0)
-            else
-                WindowSetShowing("SimpleCombatText"..label..modifier, false);
+    if time >= SimpleCombatText.Settings.updateInterval then
+        time = time - SimpleCombatText.Settings.updateInterval
+        for label,value in pairs(data) do
+            for modifier,amount in pairs(value) do
+                previous[3][label][modifier] = previous[2][label][modifier]
+                previous[2][label][modifier] = previous[1][label][modifier]
+                previous[1][label][modifier] = data[label][modifier]
+                data[label][modifier] = 0
             end
-            data[label][modifier] = 0
         end
+        for pos,set in pairs(previous) do
+            for label,value in pairs(set) do
+                for modifier,amount in pairs(value) do
+                    if amount >= SimpleCombatText.Settings.lowerLimitAggregated then
+                        WindowSetShowing("SimpleCombatText"..label..modifier..pos, true);
+                        LabelSetText("SimpleCombatText"..label..modifier..pos, towstring(amount))
+                        WindowStartAlphaAnimation("SimpleCombatText"..label..modifier..pos, Window.AnimationType.EASE_OUT, math.max(1.33-pos*0.33, 0.33), math.max(1-pos*0.33, 0), SimpleCombatText.Settings.updateInterval, true, 0, 0)
+                    else
+                        WindowSetShowing("SimpleCombatText"..label..modifier..pos, false);
+                    end
+                end
+            end
+        end
+    end
+    if SimpleCombatText.Settings.moving then
+        WindowClearAnchors("SimpleCombatTextIncomingHeal")
+        WindowAddAnchor("SimpleCombatTextIncomingHeal", "topleft", "SimpleCombatTextIncoming", "topleft", 0, 20 - 20/SimpleCombatText.Settings.updateInterval*time)
+        WindowClearAnchors("SimpleCombatTextOutgoingHeal")
+        WindowAddAnchor("SimpleCombatTextOutgoingHeal", "topleft", "SimpleCombatTextOutgoing", "topleft", 0, 20 - 20/SimpleCombatText.Settings.updateInterval*time)
+        WindowClearAnchors("SimpleCombatTextIncomingDamage")
+        WindowAddAnchor("SimpleCombatTextIncomingDamage", "bottomleft", "SimpleCombatTextIncoming", "bottomleft", 0, 20/SimpleCombatText.Settings.updateInterval*time)
+        WindowClearAnchors("SimpleCombatTextOutgoingDamage")
+        WindowAddAnchor("SimpleCombatTextOutgoingDamage", "bottomleft", "SimpleCombatTextOutgoing", "bottomleft", 0, 20/SimpleCombatText.Settings.updateInterval*time)
+    else
+        WindowSetShowing("SimpleCombatTextOutgoingDamage2", false)
+        WindowSetShowing("SimpleCombatTextOutgoingDamage3", false)
+        WindowSetShowing("SimpleCombatTextIncomingDamage2", false)
+        WindowSetShowing("SimpleCombatTextIncomingDamage3", false)
+        WindowSetShowing("SimpleCombatTextOutgoingHeal2", false)
+        WindowSetShowing("SimpleCombatTextOutgoingHeal3", false)
+        WindowSetShowing("SimpleCombatTextIncomingHeal2", false)
+        WindowSetShowing("SimpleCombatTextIncomingHeal3", false)
+        WindowClearAnchors("SimpleCombatTextIncomingHeal")
+        WindowAddAnchor("SimpleCombatTextIncomingHeal", "topleft", "SimpleCombatTextIncoming", "topleft", 0, 0)
+        WindowClearAnchors("SimpleCombatTextOutgoingHeal")
+        WindowAddAnchor("SimpleCombatTextOutgoingHeal", "topleft", "SimpleCombatTextOutgoing", "topleft", 0, 0)
+        WindowClearAnchors("SimpleCombatTextIncomingDamage")
+        WindowAddAnchor("SimpleCombatTextIncomingDamage", "bottomleft", "SimpleCombatTextIncoming", "bottomleft", 0, 0)
+        WindowClearAnchors("SimpleCombatTextOutgoingDamage")
+        WindowAddAnchor("SimpleCombatTextOutgoingDamage", "bottomleft", "SimpleCombatTextOutgoing", "bottomleft", 0, 0)
     end
 end
